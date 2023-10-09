@@ -172,5 +172,5 @@ if __name__ == "__main__":
         print(node.delta_Q)
         print(node.phase)
         print(node.n_type)
-        print(node.id)
+        # print(node.id)
         print("-----------")
