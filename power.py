@@ -71,29 +71,37 @@ def get_node_by_id(id):
             return node
 # 求雅克比矩阵
 def calc_Jacobian(delta_P, delta_Q,nodes,PV_nodes,PQ_nodes):
-    H = [[0 for i in range(n - 1)] for j in range(n-1)]
-    N = [[0 for i in range(n - 1)] for j in range(m)]
-    M = [[0 for i in range(m)] for j in range(n-1)]
+    H = [[0 for i in range(n)] for j in range(n)]
+    N = [[0 for i in range(m)] for j in range(n)]
+    M = [[0 for i in range(n)] for j in range(m)]
     L = [[0 for i in range(m)] for j in range(m)]
     for from_node in delta_P:
-        for to_node in nodes:
+        for to_node in delta_P:
             if from_node == to_node:
-                H[delta_P.index(from_node)][nodes.index(to_node)] = nodes[delta_P.index(from_node)].U * nodes[delta_P.index(from_node)].U * Y[delta_P.index(from_node)][nodes.index(to_node)].imag + nodes[delta_P.index(from_node)].delta_Q - nodes[delta_P.index(from_node)].delta_Q
-                N[delta_P.index(from_node)][nodes.index(to_node)] = 0 -nodes[delta_P.index(from_node)].U * nodes[delta_P.index(from_node)].U * Y[delta_P.index(from_node)][nodes.index(to_node)].real - nodes[delta_P.index(from_node)].delta_P + nodes[delta_P.index(from_node)].delta_P
-
+                # print(nodes[delta_P.index(from_node)].U )
+                H[delta_P.index(from_node)][delta_P.index(to_node)] = nodes[delta_P.index(from_node)].U * nodes[delta_P.index(from_node)].U * Y[delta_P.index(from_node)][delta_P.index(to_node)].imag + nodes[delta_P.index(from_node)].delta_Q - nodes[delta_P.index(from_node)].delta_Q
             else:
-                H[delta_P.index(from_node)][nodes.index(to_node)] = 0-nodes[delta_P.index(from_node)].U * nodes[nodes.index(to_node)].U * (Y[delta_P.index(from_node)][nodes.index(to_node)].real * math.sin(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase) - Y[delta_P.index(from_node)][nodes.index(to_node)].imag * math.cos(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
-                N[delta_P.index(from_node)][nodes.index(to_node)] = 0-nodes[delta_P.index(from_node)].U * nodes[nodes.index(to_node)].U * (Y[delta_P.index(from_node)][nodes.index(to_node)].real * math.cos(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase) + Y[delta_P.index(from_node)][nodes.index(to_node)].imag * math.sin(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
+                H[delta_P.index(from_node)][delta_P.index(to_node)] = 0-nodes[delta_P.index(from_node)].U * nodes[delta_P.index(to_node)].U * (Y[delta_P.index(from_node)][delta_P.index(to_node)].real * math.sin(nodes[delta_P.index(from_node)].phase - delta_P[nodes.index(to_node)].phase) - Y[delta_P.index(from_node)][delta_P.index(to_node)].imag * math.cos(nodes[delta_P.index(from_node)].phase - nodes[delta_P.index(to_node)].phase))
+    for from_node in delta_P:
+        for to_node in delta_Q:
+            if from_node == to_node:
+                N[delta_P.index(from_node)][delta_P.index(to_node)] = 0 -nodes[delta_P.index(from_node)].U * nodes[delta_P.index(from_node)].U * Y[delta_P.index(from_node)][delta_P.index(to_node)].real - nodes[delta_P.index(from_node)].delta_P + nodes[delta_P.index(from_node)].delta_P
+            else:
+                N[delta_P.index(from_node)][delta_P.index(to_node)] = nodes[delta_P.index(from_node)].U * nodes[delta_P.index(to_node)].U * (Y[delta_P.index(from_node)][delta_P.index(to_node)].real * math.cos(nodes[delta_P.index(from_node)].phase - nodes[delta_P.index(to_node)].phase) + Y[delta_P.index(from_node)][delta_P.index(to_node)].imag * math.sin(nodes[delta_P.index(from_node)].phase - nodes[delta_P.index(to_node)].phase))
 
     for from_node in delta_Q:
-        for to_node in nodes:
+        for to_node in delta_P:
             if from_node == to_node:
-                M[delta_Q.index(from_node)][nodes.index(to_node)] = nodes[delta_Q.index(from_node)].U * nodes[delta_Q.index(from_node)].U * Y[delta_Q.index(from_node)][nodes.index(to_node)].real - nodes[delta_Q.index(from_node)].delta_P + nodes[delta_P.index(from_node)].delta_P
-                L[delta_Q.index(from_node)][nodes.index(to_node)] = nodes[delta_Q.index(from_node)].U * nodes[delta_Q.index(from_node)].U * Y[delta_Q.index(from_node)][nodes.index(to_node)].imag - nodes[delta_Q.index(from_node)].delta_Q + nodes[delta_P.index(from_node)].delta_Q
+                M[delta_Q.index(from_node)][delta_P.index(to_node)] = nodes[delta_Q.index(from_node)].U * nodes[delta_Q.index(from_node)].U * Y[delta_Q.index(from_node)][delta_P.index(to_node)].real - nodes[delta_Q.index(from_node)].delta_P + nodes[delta_Q.index(from_node)].delta_P
+            else:
+                M[delta_Q.index(from_node)][delta_P.index(to_node)] = nodes[delta_Q.index(from_node)].U * nodes[delta_P.index(to_node)].U * (Y[delta_Q.index(from_node)][delta_P.index(to_node)].real * math.cos(nodes[delta_Q.index(from_node)].phase - nodes[delta_P.index(to_node)].phase) + Y[delta_Q.index(from_node)][delta_P.index(to_node)].imag * math.sin(nodes[delta_Q.index(from_node)].phase - nodes[delta_P.index(to_node)].phase))
+    for from_node in delta_Q:
+        for to_node in delta_Q:
+            if from_node == to_node:
+                L[delta_Q.index(from_node)][delta_Q.index(to_node)] = nodes[delta_Q.index(from_node)].U * nodes[delta_Q.index(from_node)].U * Y[delta_Q.index(from_node)][delta_Q.index(to_node)].imag - nodes[delta_Q.index(from_node)].delta_Q + nodes[delta_P.index(from_node)].delta_Q
 
             else:
-                M[delta_Q.index(from_node)][nodes.index(to_node)] = nodes[delta_Q.index(from_node)].U * nodes[nodes.index(to_node)].U * (Y[delta_Q.index(from_node)][nodes.index(to_node)].real * math.cos(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase) + Y[delta_Q.index(from_node)][nodes.index(to_node)].imag * math.sin(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
-                L[delta_Q.index(from_node)][nodes.index(to_node)] = 0-nodes[delta_Q.index(from_node)].U * nodes[nodes.index(to_node)].U * (Y[delta_Q.index(from_node)][nodes.index(to_node)].real * math.sin(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase) - Y[delta_Q.index(from_node)][nodes.index(to_node)].imag * math.cos(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
+                L[delta_Q.index(from_node)][delta_Q.index(to_node)] = 0-nodes[delta_Q.index(from_node)].U * nodes[delta_Q.index(to_node)].U * (Y[delta_Q.index(from_node)][delta_Q.index(to_node)].real * math.sin(nodes[delta_Q.index(from_node)].phase - nodes[delta_Q.index(to_node)].phase) - Y[delta_Q.index(from_node)][delta_Q.index(to_node)].imag * math.cos(nodes[delta_Q.index(from_node)].phase - nodes[delta_Q.index(to_node)].phase))
 
     # 分块矩阵合成J
 
@@ -103,6 +111,7 @@ def calc_Jacobian(delta_P, delta_Q,nodes,PV_nodes,PQ_nodes):
 
 # 计算修正方程
 def calc_delta_U(J,delta_P,delta_Q,nodes,PV_nodes,PQ_nodes):
+    # print(J)
     j_inv = np.linalg.inv(J)
 
     delta_num = []
@@ -111,20 +120,22 @@ def calc_delta_U(J,delta_P,delta_Q,nodes,PV_nodes,PQ_nodes):
     for node in delta_Q:
         delta_num.append(node.delta_Q)
     vector = np.array(delta_num)
-    vector = vector.T
+    # print(vector)
+    vector = vector.reshape(m+n,1)
+    # print(vector)
     delta_x = - j_inv * vector
     for i in range(len(delta_P)):
-        nodes[i].delta_P = delta_x[i]
+        nodes[i].delta_phase = delta_x[i,0]
     for j in range(len(delta_Q)):
-        nodes[j].delta_Q = delta_x[len(delta_P)+j]
+        nodes[j].delta_U = delta_x[len(delta_P)+j,0]
 
 
 # 修正
 def revise(nodes,delta_U,PV_nodes,PQ_nodes):
     for i in range(len(delta_P)):
-        nodes[i].phase = nodes[i].phase + nodes[i].delta_P
+        nodes[i].phase = nodes[i].phase + nodes[i].delta_phase
     for j in range(len(delta_Q)):
-        nodes[j].U = nodes[j].U + nodes[j].delta_Q * nodes[j].U
+        nodes[j].U = nodes[j].U + nodes[j].delta_U * nodes[j].U
 
 
 
@@ -140,10 +151,10 @@ if __name__ == "__main__":
     n = 4
     m = 2
     nodes = [
-        Node(1,1,0,0,1, "PQ"),
-        Node(2,2,0,0,1,"PQ"),
-        Node(3,2,0,0,1,"PV"),
-        Node(4,3,0,0,1,"PV")
+        Node(1,5,1,1,4, "PQ"),
+        Node(2,2,3,2,3,"PQ"),
+        Node(3,7,1,3,1,"PV"),
+        Node(4,8,1,4,2,"PV")
         ]
     PQ_nodes = []
     PV_nodes = []
@@ -167,17 +178,17 @@ if __name__ == "__main__":
         if max(mo_P) < ACCURACY and max(mo_Q) < ACCURACY:
             break
         J = calc_Jacobian(delta_P,delta_Q,nodes,PV_nodes,PQ_nodes)
-        delta_U = calc_delta_U(J,delta_P,delta_Q,nodes,PV_nodes,PQ_nodes)
-        nodes = revise(nodes,delta_U,PV_nodes,PQ_nodes)
+        calc_delta_U(J,delta_P,delta_Q,nodes,PV_nodes,PQ_nodes)
+        revise(nodes,None,PV_nodes,PQ_nodes)
 
-    for node in nodes:
-        print(node.U)
-        print(node.delta_U)
-        print(node.P)
-        print(node.Q)
-        print(node.delta_P)
-        print(node.delta_Q)
-        print(node.phase)
-        print(node.n_type)
-        print(node.id)
-        print("-----------")
+        for node in nodes:
+            print(node.U)
+            print(node.delta_U)
+            print(node.P)
+            print(node.Q)
+            print(node.delta_P)
+            print(node.delta_Q)
+            print(node.phase)
+            print(node.n_type)
+            print(node.id)
+            print("-----------")
