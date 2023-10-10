@@ -42,11 +42,11 @@ def calc_unbalance():
     a = 0
     b = 0
     for node in nodes:
-        for j in node.id:
-            for node_1 in nodes:
-                if node_1.id == j :
-                    a = a + node_1.U * (Y[node.id][j].real * math.cos(nodes[node.id].phase - nodes[j].phase))
-                    b = b + node_1.U * (Y[node.id][j].imag * math.sin(nodes[node.id].phase - nodes[j].phase))
+        for j in range(node.id-1):
+            for i in range(len(nodes)-1):
+                if nodes[i].id == j :
+                    a = a + nodes[i].U * (Y[node.id-1][j].real * math.cos(nodes[node.id-1].phase - nodes[j].phase))
+                    b = b + nodes[i].U * (Y[node.id-1][j].imag * math.sin(nodes[node.id-1].phase - nodes[j].phase))
 
 
         if node.n_type == "PQ":
@@ -58,7 +58,7 @@ def calc_unbalance():
     # 不平衡量列向量
     delta_P = []
     delta_Q = []
-    for node in N:
+    for node in nodes:
         if node.n_type == "PQ":
             delta_P.append(node)
             delta_Q.append(node)
@@ -71,19 +71,19 @@ def get_node_by_id(id):
             return node
 # 求雅克比矩阵
 def calc_Jacobian(delta_P, delta_Q,nodes,PV_nodes,PQ_nodes):
-    H = [[0 for i in range(len(nodes))] for j in range(len(delta_P))]
-    N = [[0 for i in range(len(PQ_nodes))] for j in range(len(delta_P))]
-    M = [[0 for i in range(len(nodes))] for j in range(len(delta_Q))]
-    L = [[0 for i in range(len(PQ_nodes))] for j in range(len(delta_Q))]
+    H = [[0 for i in range(n - 1)] for j in range(n-1)]
+    N = [[0 for i in range(n - 1)] for j in range(m)]
+    M = [[0 for i in range(m)] for j in range(n-1)]
+    L = [[0 for i in range(m)] for j in range(m)]
     for from_node in delta_P:
         for to_node in nodes:
             if from_node == to_node:
                 H[delta_P.index(from_node)][nodes.index(to_node)] = nodes[delta_P.index(from_node)].U * nodes[delta_P.index(from_node)].U * Y[delta_P.index(from_node)][nodes.index(to_node)].imag + nodes[delta_P.index(from_node)].delta_Q - nodes[delta_P.index(from_node)].delta_Q
-                N[delta_P.index(from_node)][nodes.index(to_node)] = -nodes[delta_P.index(from_node)].U * nodes[delta_P.index(from_node)].U * Y[delta_P.index(from_node)][nodes.index(to_node)].real - nodes[delta_P.index(from_node)].delta_P + nodes[delta_P.index(from_node)].delta_P
+                N[delta_P.index(from_node)][nodes.index(to_node)] = 0 -nodes[delta_P.index(from_node)].U * nodes[delta_P.index(from_node)].U * Y[delta_P.index(from_node)][nodes.index(to_node)].real - nodes[delta_P.index(from_node)].delta_P + nodes[delta_P.index(from_node)].delta_P
 
             else:
-                H[delta_P.index(from_node)][nodes.index(to_node)] = -nodes[delta_P.index(from_node)] * nodes[nodes.index(to_node)] * (Y[delta_P.index(from_node)][nodes.index(to_node)].real * math.sin(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase) - Y[delta_P.index(from_node)][nodes.index(to_node)].imag * math.cos(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
-                N[delta_P.index(from_node)][nodes.index(to_node)] = -nodes[delta_P.index(from_node)] * nodes[nodes.index(to_node)] * (Y[delta_P.index(from_node)][nodes.index(to_node)].real * math.cos(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase) + Y[delta_P.index(from_node)][nodes.index(to_node)].imag * math.sin(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
+                H[delta_P.index(from_node)][nodes.index(to_node)] = 0-nodes[delta_P.index(from_node)].U * nodes[nodes.index(to_node)].U * (Y[delta_P.index(from_node)][nodes.index(to_node)].real * math.sin(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase) - Y[delta_P.index(from_node)][nodes.index(to_node)].imag * math.cos(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
+                N[delta_P.index(from_node)][nodes.index(to_node)] = 0-nodes[delta_P.index(from_node)].U * nodes[nodes.index(to_node)].U * (Y[delta_P.index(from_node)][nodes.index(to_node)].real * math.cos(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase) + Y[delta_P.index(from_node)][nodes.index(to_node)].imag * math.sin(nodes[delta_P.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
 
     for from_node in delta_Q:
         for to_node in nodes:
@@ -92,8 +92,8 @@ def calc_Jacobian(delta_P, delta_Q,nodes,PV_nodes,PQ_nodes):
                 L[delta_Q.index(from_node)][nodes.index(to_node)] = nodes[delta_Q.index(from_node)].U * nodes[delta_Q.index(from_node)].U * Y[delta_Q.index(from_node)][nodes.index(to_node)].imag - nodes[delta_Q.index(from_node)].delta_Q + nodes[delta_P.index(from_node)].delta_Q
 
             else:
-                M[delta_Q.index(from_node)][nodes.index(to_node)] = nodes[delta_Q.index(from_node)] * nodes[nodes.index(to_node)] * (Y[delta_Q.index(from_node)][nodes.index(to_node)].real * math.cos(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase) + Y[delta_Q.index(from_node)][nodes.index(to_node)].imag * math.sin(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
-                L[delta_Q.index(from_node)][nodes.index(to_node)] = -nodes[delta_Q.index(from_node)] * nodes[nodes.index(to_node)] * (Y[delta_Q.index(from_node)][nodes.index(to_node)].real * math.sin(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase) - Y[delta_Q.index(from_node)][nodes.index(to_node)].imag * math.cos(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
+                M[delta_Q.index(from_node)][nodes.index(to_node)] = nodes[delta_Q.index(from_node)].U * nodes[nodes.index(to_node)].U * (Y[delta_Q.index(from_node)][nodes.index(to_node)].real * math.cos(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase) + Y[delta_Q.index(from_node)][nodes.index(to_node)].imag * math.sin(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
+                L[delta_Q.index(from_node)][nodes.index(to_node)] = 0-nodes[delta_Q.index(from_node)].U * nodes[nodes.index(to_node)].U * (Y[delta_Q.index(from_node)][nodes.index(to_node)].real * math.sin(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase) - Y[delta_Q.index(from_node)][nodes.index(to_node)].imag * math.cos(nodes[delta_Q.index(from_node)].phase - nodes[nodes.index(to_node)].phase))
 
     # 分块矩阵合成J
 
@@ -157,7 +157,14 @@ if __name__ == "__main__":
 
     while True:
         delta_P,delta_Q = calc_unbalance()
-        if max(delta_P) < ACCURACY and max(delta_Q) < ACCURACY:
+        mo_P = []
+        mo_Q = []
+        for i in delta_P:
+            mo_P.append(i.delta_P)
+        for i in delta_Q:
+            mo_Q.append(i.delta_Q)
+
+        if max(mo_P) < ACCURACY and max(mo_Q) < ACCURACY:
             break
         J = calc_Jacobian(delta_P,delta_Q,nodes,PV_nodes,PQ_nodes)
         delta_U = calc_delta_U(J,delta_P,delta_Q,nodes,PV_nodes,PQ_nodes)
@@ -172,5 +179,5 @@ if __name__ == "__main__":
         print(node.delta_Q)
         print(node.phase)
         print(node.n_type)
-        # print(node.id)
+        print(node.id)
         print("-----------")
